@@ -28,7 +28,7 @@ When Anthropic says "simple, composable patterns," when Vercel says "just filesy
 | Exit codes | The unit of verification. Success, failure, needs-input. |
 | Mechanism/policy separation | The organizing principle. Same LLM, different soul file, different agent. |
 
-### The Shell as Control Plane
+## The Shell as Control Plane
 
 The shell is an interface for a human to issue natural-ish language commands to an interpreter that orchestrates tools. Understanding the shell deeply is understanding the design space that AI agents now inhabit.
 
