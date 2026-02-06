@@ -2,20 +2,17 @@
 
 **The terminal is a 50-year-old prototype of an agentic interface.**
 
-Shell Agentics is the thesis that process hierarchies, file descriptors, text streams, and exit codes provide the optimal abstraction layer for agent coordination. It is also a toolkit of composable bash primitives that demonstrates this thesis through working code.
+Shell Agentics is the idea that process hierarchies, file descriptors, text streams, and exit codes provide the optimal abstraction layer for agent coordination. It is also a proof of concept toolkit of composable bash primitives that demonstrates this thesis through working code.
 
-The LLM is an oracle, not a driver. Tool dispatch is controlled by explicit allowlists in shell scripts.
+It treats the LLM is an oracle, not a driver. Tool dispatch is controlled by explicit allowlists in shell scripts.
 
-The shell is the control plane of agentic architecture.
+The shell becomes the control plane of agent architectures.
 
 ---
 
 ## All Roads Lead to Unix
 
-The Unix philosophy advocates for focused tools, composition, text as universal interface, persistence via files, and separation of mechanism and policy. This is optimal for agent architectures. The field is rediscovering this through painful trial and error, arriving at primitives that Unix established decades ago. The Unix philosophy is the only computing philosophy that has scaled across every paradigm shift. When agent state is files and coordination is streams, reproducibility is trivial and instrumentation is free.
-
-When Anthropic says "simple, composable patterns," when Vercel says "just filesystems and bash," when Fly.io says "agents want computers, not sandboxes," when Ptacek says "you should write an agent" and builds one in 30 minutes — they're all pointing towards Unix.
-
+The Unix philosophy advocates for focused tools, composition, text as universal interface, persistence via files, and separation of mechanism and policy. This is optimal for agent architectures, and the field is discovering this through painful trial and error, reverse engineering primitives that Unix established decades ago. The Unix philosophy is the only computing philosophy that has scaled across every paradigm shift. When agent state is files and coordination is streams, reproducibility is trivial and instrumentation is free.
 
 ### The Six Primitives
 
@@ -30,27 +27,25 @@ When Anthropic says "simple, composable patterns," when Vercel says "just filesy
 
 ## The Shell as Control Plane
 
-The shell is an interface for a human to issue natural-ish language commands to an interpreter that orchestrates tools. Understanding the shell deeply is understanding the design space that AI agents now inhabit.
+The shell is an interface for a human to issue natural-ish language commands to an interpreter that orchestrates tools. Understanding the shell is understanding the design space that AI agents now inhabit.
 
-When you want to observe an agent's actions, you check the execution trace. Every command, every decision, every timestamp is inspectable with Unix tools. It's all Unix and it's all in the shell.
+When you want to observe an agent's actions, you check the execution trace. Every command, every decision, every timestamp is inspectable with Unix tools. 
 
 **Minimal adoption cost.** Every alternative coordination protocol — CORBA, D-Bus, REST, gRPC, MCP — requires ecosystem buy-in. The shell requires only: can you emit text?
 
 **Perfect separation of concerns.** Shell provides execution. Agents provide intent. Files provide state. No component trusts another's internals.
 
-**Recursive verification terminates.** Agents are the first software that needs to be inspected by other agents. Natural language output cannot be programmatically verified without another LLM — turtles all the way down. Shell output can be grep'd, diff'd, hashed. The inspection chain has a ground floor.
+**Recursive verification terminates.** Agents are the first software that needs to be inspected by other instances of itself. Natural language output cannot be programmatically verified without another LLM — turtles all the way down. Shell output can be grep'd, diff'd, hashed. The inspection chain has a ground floor.
 
-**50 years of selection pressure.** Every alternative has required centralized coordination to adopt. Every alternative eventually leaked or ossified. The shell is the residue.
+**50 years of selection pressure.** Every alternative has required centralized coordination to adopt. Every alternative eventually leaked or ossified. The shell is the result of selection.
 
 ## Natural Language Coordination
 
-Shell Agentics does not prohibit natural language agent coordination. It asserts a separation of concerns:
+When natural language serves as coordination, execution, *and* verification — when "doing something" means "saying you did it" — the system loses its ground floor. Shell Agentics does not prohibit natural language agent coordination, it asserts a separation of concerns:
 
 - **Deliberation layer:** Unconstrained. Agents may coordinate, negotiate, and share knowledge in natural language.
 - **Execution layer:** Shell-semantic. Actions must be commands, file operations, or processes with observable effects.
 - **Verification layer:** Shell-inspectable. Ground truth is the execution trace, not the conversation about it.
-
-When NL serves as coordination, execution, *and* verification — when "doing something" means "saying you did it" — the system loses its ground floor.
 
 **Let agents chat about what to do. Log what they actually did.**
 
@@ -58,7 +53,7 @@ When NL serves as coordination, execution, *and* verification — when "doing so
 
 ### How Most Agent Frameworks Handle Tool Calling
 
-In the standard framework model, you hand an LLM a prompt and a list of tools. The LLM may respond with tool requests instead of text. Your code automatically executes whatever the LLM requests, feeds the result back, and the LLM continues. The loop is automated. The LLM drives.
+In the standard framework model, the harness (Claude Code, Codex, Cursor, et al) sends an LLM a text prompt and a list of "tools" the LLM can request that the harness take — reading files, executing commands, searching the web, modifying code. The LLM can trigger this by responding back to the harness with a structured tool request (tool name + input parameters as JSON) instead of text. The harness either executes the tool automatically or confirms with the user (approval gate). The harness then feeds the result back and the  LLM generates again. This is a multi-turn protocol between harness and LLM. You could view the LLM as a pure function, and the harness as a mediator executing side effects. The loop is automated. The LLM drives.
 
 ```
 Framework model:
