@@ -199,11 +199,6 @@ Agent: Done! I've backed up the database and verified
 
 One side requires trust. The other side *is* trust.
 
----
-
-## The Convergence Evidence
-
-Between December 2024 and February 2026, multiple independent sources arrived at the same architectural conclusions. The design space has an attractor, and these observers found it independently. The attractor is Unix.
 
 ---
 
@@ -273,7 +268,9 @@ The conceptual mapping between tiers is clean because both Shell Agentics and BE
 The oracle model — LLM as oracle, script/supervisor as gatekeeper — should be the default at every tier.
 
 
-## Seven Principles
+## Proposed Principles
+
+Between December 2024 and February 2026, multiple independent sources arrived at the same architectural conclusions. The design space has an attractor, and these observers found it independently. The attractor is Unix. This leads to some proposed design principles.
 
 ### 1. Agents Want Computers, Not Containers
 
