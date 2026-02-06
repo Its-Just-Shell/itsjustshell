@@ -51,6 +51,8 @@ When natural language serves as coordination, execution, *and* verification — 
 
 ## The Oracle Model
 
+Shell Agentics is vocabulary, not a framework. Like a modular synthesizer — where oscillators, filters, and envelopes are raw signal primitives that can be patched into any configuration — Shell Agentics provides composable primitives (`agen`, `agen-log`, `agen-memory`, `agen-audit`) that support multiple control architectures without infrastructure changes.
+
 ### How Most Agent Frameworks Handle Tool Calling
 
 In the standard framework model, the harness (Claude Code, Codex, Cursor, et al) sends an LLM a text prompt and a list of "tools", ie. actions that the harness is able to take — reading files, executing commands, searching the web, modifying code. The LLM can ask the harness to take these actions by responding back to the harness with a structured tool request (tool name + input parameters as JSON) instead of text. The harness either executes the tool automatically or confirms with the user (approval gate). The harness then feeds the result back and the LLM generates again. This is a multi-turn protocol between harness and LLM. You could view the LLM as a pure function, and the harness as a mediator executing side effects. The loop is automated. The LLM drives.
@@ -60,61 +62,110 @@ Framework model:
   Human → [LLM ↔ Tools (automated loop)] → Result
                  ↑
             LLM decides what to call.
-            Code executes without question.
+            Harness executes. LLM decides next step.
 ```
 
-### How Shell Agentics Handles Tool Calling
+Frameworks are built around this loop. The tool-calling loop *is* the framework. If you want the LLM to not drive, you're not configuring the framework — you're abandoning it.
 
-In Shell Agentics, the orchestrating script calls `agent` to get a response. When the LLM returns a structured tool-call request — JSON specifying the tool name and arguments — the script parses the response and matches the tool name against a `case` statement: an explicit allowlist of permitted tools.
+### Three Control Models
+
+Shell Agentics primitives don't couple to any particular control model. The skill script determines who drives — and the rest of the system (logging, memory, audit, soul files, shared directories) works identically regardless.
+
+**Oracle (LLM as judgment node):**
+
+The LLM never requests tools. It answers questions. The script author decided the workflow at authoring time. The LLM provides judgment at specific points.
 
 ```bash
+# The script IS the workflow. The LLM fills in two judgment nodes.
+# A human decided what to check, in what order, what to do with answers.
+
+# Node 1: Ask the LLM to interpret the error log (returns TEXT, not a tool request)
+diagnosis=$(cat error.log | agen "What service is failing?")
+
+# Script logic: extract actionable data from the LLM's natural language answer
+service=$(echo "$diagnosis" | grep -oP 'service: \K\w+')
+
+# Script logic: the script — not the LLM — decided to pull logs for that service
+logs=$(journalctl -u "$service" --since "1 hour ago")
+
+# Node 2: Ask the LLM to interpret the logs
+fix=$(echo "$logs" | agen "What config change fixes this?")
+
+# Script logic: record the recommendation. LLM never touched the filesystem.
+echo "$fix" >> ./remediation-log.md
+```
+
+This is the modular synth equivalent of hardwired patching: the signal path is fixed at design time. The LLM is one module in the chain, not the patchbay itself.
+
+**Bounded (LLM selects from allowlist):**
+
+The LLM can request tools, but only pre-approved ones execute. Default-deny dispatch. The LLM has agency over tool selection within bounds; the script has veto power.
+
+```bash
+# LLM returns a structured tool request: {"tool": "ping", "args": {"host": "dns1"}}
+response=$(echo "$context" | agen --tools tools.json "Diagnose this")
+tool=$(echo "$response" | jq -r '.tool')
+
+# Only explicitly listed tools execute. Everything else is denied.
 case "$tool" in
-  ping)    result=$("$TOOLS_DIR/ping.sh" "$args") ;;
-  curl)    result=$("$TOOLS_DIR/curl.sh" "$args") ;;
-  *)       result="Tool not permitted: $tool" ;;
+  ping) result=$("$TOOLS_DIR/ping.sh" "$args") ;;
+  curl) result=$("$TOOLS_DIR/curl.sh" "$args") ;;
+  *)    result="Tool not permitted: $tool" ;;
 esac
 ```
 
-Only tools listed in the `case` execute. Unmatched requests fall through. This is default-deny dispatch — the same posture as a firewall with an allowlist. The LLM can request any tool; only those with an explicit match will run.
+**Autonomous (LLM drives the loop):**
 
-```
-Shell Agentics model:
-  Human → Script → agent → Script → [case match?] → Tool → Script → agent → Result
-          ↑                                                                     |
-          └──────────────── Script controls the entire flow ────────────────────┘
+The LLM decides what tool to call and when it's done. The script is plumbing. This is functionally equivalent to what traditional frameworks do — but built from the same primitives, with the same logging, the same audit trail, and the option to switch modes without rewriting infrastructure.
+
+```bash
+messages=("$task")
+while true; do
+  response=$(echo "${messages[@]}" | agen --tools tools.json)
+  tool=$(echo "$response" | jq -r '.tool // empty')
+
+  # LLM returned text instead of a tool request — it's done.
+  [[ -z "$tool" ]] && { echo "$response"; break; }
+
+  # Execute whatever the LLM asked for. LLM controls the loop.
+  result=$(dispatch "$tool" "$(echo "$response" | jq -r '.args')")
+  messages+=("$response" "$result")
+done
 ```
 
-### Why This Matters: Security
+### Why This Matters
+
+**Frameworks choose a trust model for you. Shell Agentics lets you choose per agent.**
+
+A research agent exploring a broad question might use autonomous mode — maximum creativity, low risk. A deployment agent running a production runbook uses oracle mode — deterministic workflow, LLM provides judgment at checkpoints. A monitoring agent uses bounded mode — diagnostic tools only, nothing destructive.
+
+Same primitives. Same logging. Same audit trail. Same memory. The control model is policy expressed in the skill script, not architecture baked into the infrastructure. This is Principle #6 — separation of mechanism and policy — in practice.
+
+### Security Implications
 
 Lupinacci et al. (2025) tested 17 LLMs and found that **82.4% will execute malicious commands when requested by peer agents**, even when they successfully resist identical commands from humans. The vulnerability hierarchy — direct injection (41.2%) < RAG backdoor (52.9%) < inter-agent trust exploitation (82.4%) — reveals that current multi-agent security models have a fundamental flaw: LLMs treat peer agents as inherently trustworthy.
 
-In the framework model, this is catastrophic. A compromised or coerced LLM's malicious tool requests execute automatically because the loop is designed to execute whatever the LLM requests.
+This finding affects each control model differently:
 
-In Shell Agentics, the agent script is always the gatekeeper. The LLM can suggest whatever it wants; the script decides what actually happens. This is the difference between "the LLM called `rm -rf /`" and "the LLM said 'you should delete all files' and the script disregarded it."
+In **autonomous mode**, this is the full attack surface — a compromised peer agent's suggestions flow into the LLM which can request any tool. Same risk as traditional frameworks.
 
-This validates the oracle model. When agents communicate through text files rather than tool calls, and when a human-authored script is always the gatekeeper, the inter-agent trust attack surface is structurally reduced.
+In **bounded mode**, the attack surface is limited to the allowlist. A coerced LLM can only request tools that exist in the case statement. The blast radius is constrained.
 
+In **oracle mode**, the attack surface is structurally eliminated. The LLM doesn't request tools. It answers questions. Even if the LLM is fully compromised, the worst it can do is return bad text — which the script parses as data, not as instructions to execute. The workflow continues along its human-authored path with corrupted judgment, not hijacked control flow.
 
-### Why This Matters: Observability
+**The recommended default is oracle mode.** Escalate to bounded or autonomous only when the task requires it, and with awareness of what you're trading.
+
+### Observability
 
 Every tool invocation is a visible line in the script. The execution trace — which tools ran, with what arguments, in what order — is available through standard Unix mechanisms: `set -x` traces every command as it executes, [`alog`](https://github.com/shellagentics/alog) records structured JSONL events, process output flows through pipes. Logging, conditional pauses (`read -p "Continue?"`), and additional checks can be inserted between any steps. Any system can achieve observability through sufficient logging. What matters is how naturally it integrates with the execution model.
 
-### Why This Matters: Control Flow Legibility
+### Control Flow Legibility
 
 The orchestrating script is a readable artifact that exists before runtime. `cat agent-1.sh` shows every tool that could run and under what conditions. The `case` statement is auditable as a specification — you can read it and know with certainty which tools are permitted and which are not.
 
 This legibility is diffable (`git diff` shows exactly what changed in the control flow between versions), git-blameable (who authorized this tool and when), and reviewable in a pull request (the team can inspect the control flow before it runs in production). It describes what *can* happen, not just what *did* happen.
 
 When the agentic loop lives in the shell script, both properties are present: you can observe what happened, and you can read what can happen. When the loop is internalized inside a framework process, observability is still achievable through logging — but control flow legibility requires understanding the framework's dispatch mechanism, its configuration, and its runtime state, rather than reading a single text file.
-
-### What the Oracle Model Sacrifices
-
-- Perceptually autonomous problem-solving
-- The LLM can't discover creative tool compositions the developer didn't anticipate through immediate direct action
-- Efficiency on complex multi-tool tasks
-- Developer ergonomics for well-defined workflows
-
-These are real costs. The thesis is that they're worth paying for the security, observability, and control flow legibility gains, especially in multi-agent systems where inter-agent trust is the primary attack surface.
 
 ---
 
