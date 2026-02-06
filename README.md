@@ -100,13 +100,13 @@ In Shell Agentics, the agent script is always the gatekeeper. The LLM can sugges
 This validates the oracle model. When agents communicate through text files rather than tool calls, and when a human-authored script is always the gatekeeper, the inter-agent trust attack surface is structurally reduced.
 
 
-### Why This Matters: Observability and Control Flow Legibility
+### Why This Matters: Observability
 
-Shell Agentics provides two complementary properties that together define its approach to trust.
+Every tool invocation is a visible line in the script. The execution trace — which tools ran, with what arguments, in what order — is available through standard Unix mechanisms: `set -x` traces every command as it executes, [`alog`](https://github.com/shellagentics/alog) records structured JSONL events, process output flows through pipes. Logging, conditional pauses (`read -p "Continue?"`), and additional checks can be inserted between any steps. Any system can achieve observability through sufficient logging. What matters is how naturally it integrates with the execution model.
 
-**Observability.** Every tool invocation is a visible line in the script. The execution trace — which tools ran, with what arguments, in what order — is available through standard Unix mechanisms: `set -x` traces every command as it executes, [`alog`](https://github.com/shellagentics/alog) records structured JSONL events, process output flows through pipes. Logging, conditional pauses (`read -p "Continue?"`), and additional checks can be inserted between any steps. Any system can achieve observability through sufficient logging. What matters is how naturally it integrates with the execution model.
+### Why This Matters: Control Flow Legibility
 
-**Control flow legibility.** This is the structural property that distinguishes the shell model. The orchestrating script is a readable artifact that exists before runtime. `cat agent-1.sh` shows every tool that could run and under what conditions. The `case` statement is auditable as a specification — you can read it and know with certainty which tools are permitted and which are not.
+The orchestrating script is a readable artifact that exists before runtime. `cat agent-1.sh` shows every tool that could run and under what conditions. The `case` statement is auditable as a specification — you can read it and know with certainty which tools are permitted and which are not.
 
 This legibility is diffable (`git diff` shows exactly what changed in the control flow between versions), git-blameable (who authorized this tool and when), and reviewable in a pull request (the team can inspect the control flow before it runs in production). It describes what *can* happen, not just what *did* happen.
 
