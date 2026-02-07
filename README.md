@@ -1,18 +1,18 @@
 # Its Just Shell
 
-This document presents the idea that Unix and the shell provide all the AI vocabulary you need for agent design decisions. This enables design decisions to become explicit, composable, inspectable, observable, and customizable per-agent. Process hierarchies, file descriptors, text streams, and exit codes provide the optimal abstraction layer for secure agent coordination, and they come built into the terminal. The terminal, an interpreter that orchestrates tools, is the prototype of an agentic environment, Unix is the substrate, and the shell is the interface.
-
-This document is accompanied by examples of agent architectures that explore the thesis through working code. 
+This document advocates that Unix and the shell enable agent architectures to become explicit, composable, inspectable, observable, and customizable per agent. Process hierarchies, file descriptors, text streams, and exit codes provide the optimal abstraction layer for secure agent coordination, and they come built right into the shell. The terminal is an interpreter that orchestrates tools, the prototypal agentic harness, while Unix is the substrate, and the shell is the interface.
 
 ## All Roads Lead to Unix
 
-The Unix philosophy advocates for focused tools, composition, text as universal interface, persistence via files, and separation of mechanism and policy. This is optimal for agent architectures and something the field is discovering progressively through trial and error, reverse engineering primitives that Unix established decades ago. The Unix philosophy is the only computing philosophy that has scaled across every paradigm shift for good reasons. And as it turns out, the shell is the control plane of agent architecture.
+The Unix philosophy advocates for 
 
-When agent state is files and coordination is streams, reproducibility is trivial, instrumentation is free, and LLM autonomy is decided per agent.
+- Focused tools
+- Composition
+- Text as universal interface
+- Persistence via files
+- Separation of mechanism and policy
 
-When you want to observe an agent's actions, you check the execution trace. Every command, every decision, every timestamp is inspectable with Unix tools. 
-
-Unix has the ideal separation of concerns. Shell provides execution. Agents provide intent. Files provide state. No component trusts another's internals.
+This is optimal for agent architecture, something the field is progressively realizing. Unix is the only computing philosophy that has scaled across every paradigm shift, and for good reason. When agent state is files and coordination is streams, reproducibility is trivial, instrumentation is free, and LLM autonomy is decided per agent. When you want to observe an agent's actions, you check the execution trace. Every command, every decision, every timestamp is inspectable with Unix tools, and all interfaceable through the shell, which turns out to be the control plane of agent architecture.
 
 ## The Ground Floor
 
@@ -214,6 +214,10 @@ cat error.log | agent "diagnose" | agent "suggest fix" > recommendations.md
 ```
 
 Layered prompt construction (system prompt + piped input + positional task). Multi-backend support (claude-code CLI, `llm` CLI, direct Anthropic API).
+
+This document is accompanied by examples of agent architectures that explore the thesis through working code. 
+
+
 
 ### [ascr](https://github.com/shellagentics/ascr) — Composable Workflow Scripts
 
@@ -418,7 +422,6 @@ Long-horizon tasks exhaust context windows. Agent state drifts. You need compact
 
 > "Checkpoints are so fast we want you to use them as a basic feature of the system and not as an escape hatch when things go wrong; like a git restore, not a system restore."
 > — Thomas Ptacek, Fly.io ([The Design & Implementation of Sprites](https://fly.io/blog/design-and-implementation/), Jan 2026)
-
 
 ## What Exists
 
