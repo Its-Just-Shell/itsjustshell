@@ -1,6 +1,6 @@
 # Its Just Shell
 
-This document presents the idea that Unix and the shell provide vocabulary for agent design decisions that most agent systems make implicitly. This enables design decisions to become explicit, composable, inspectable, observable, and customizable per-agent. Process hierarchies, file descriptors, text streams, and exit codes provide the optimal abstraction layer for secure agent coordination, and they come built into the terminal. The terminal, an interpreter that orchestrates tools, is the prototype of an agentic environment, Unix is the substrate, and the shell is the interface.
+This document presents the idea that Unix and the shell provide vocabulary for agent design decisions, decisions that are made for you in most agent frameworks. This enables design decisions to become explicit, composable, inspectable, observable, and customizable per-agent. Process hierarchies, file descriptors, text streams, and exit codes provide the optimal abstraction layer for secure agent coordination, and they come built into the terminal. The terminal, an interpreter that orchestrates tools, is the prototype of an agentic environment, Unix is the substrate, and the shell is the interface.
 
 This document is accompanied by examples of agent architectures that explore the thesis through working code. 
 
