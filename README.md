@@ -4,7 +4,7 @@
 
 ""I think your thesis is actually about survival through simplicity, not optimality through architecture. " - Claude
 
-(PROPOSED ADDITION / MR: the core value prop of itsjustshell is that composability with tested established primitives that you're already using under the covers beats overengineered frameworks for "simple domain agents" (new TM), and that grasping that layer's methodology and philosophy on an intuitive level allows you to then build open it necessary levels of abstraction, at the correct point they become necessary.)
+(PROPOSED ADDITION / MR: the core value prop of itsjustshell is that composability with tested established primitives that you're already using under the covers beats overengineered frameworks for "simple domain agents" (new TM), and that grasping that layer's methodology and philosophy on an intuitive level allows you to then build upon it the necessary levels of abstraction when required, at the correct point they become necessary.)
 
 This document proposes that Unix and the shell provide a practical foundation for building and profiling local AI agent architectures. Introducing generic, uniform data representations enables them to become explicit, easily composed, and readily observable agentic systems. Process hierarchies, file descriptors, text streams, and exit codes provide robust abstractions for agent coordination, all native to the environment. The shell is the prototypical orchestration layer; Unix itself provides the underlying substrate of processes, files, and I/O streams. External capabilities, such as vector stores, distributed tracers, and semantic caches can be integrated as composable and inspectable components.
 
