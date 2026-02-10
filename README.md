@@ -138,7 +138,7 @@ The workflow is emergent. You can't read it before it runs — the LLM writes it
 
 To deeper understand the LLM-driven architecture, we need to look at what tool calling is mechanistically.
 
-When you send a prompt to the Anthropic or OpenAI API, you can also send a list of "tools" — JSON schemas describing functions the LLM can request. The LLM may respond not with text, but with a structured tool request: "I want to call function X with arguments Y." The LLM then stops generating. Your code executes the requested function, captures the result, and sends a new API message containing the tool result. The LLM generates again, now with the tool result in its context. It may request another tool call, or produce a final text response.
+When you send a prompt to the Anthropic or OpenAI API, the harness (Claude Code, Opencode, et al) also sends a list of "tools" — JSON schemas describing functions the LLM can request. The LLM may respond with a structured tool request: "I want to call function X with arguments Y from this tool." The harness executes the requested function, captures the result, and sends a message back to the llm containing the tool result. The LLM generates again, now with the tool result in its context. It may request another tool call, or produce a final text response.
 
 This is a multi-turn protocol. A series of LLM responses, each potentially terminated by a tool request, with the orchestrating code executing the tools and feeding results back. The LLM never executes anything itself — it requests, waits, receives, and continues.
 
