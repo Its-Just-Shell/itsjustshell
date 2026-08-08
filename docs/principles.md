@@ -1,0 +1,8 @@
+1. Deferral of user agency to an agent can be quick or gradual, but its inevitable without unambiguous controls
+2. The longer a user/agent thread grows, the more the user assumes the existence of an entity and awareness that does not exist
+3. Users assume that intuition is proportional to knowlede in agents, this is incorrect
+4. "Users" were named in Unix as human "users" of the system. Using the system means leveraging the system. With Unix, the only way to leverage the system is to learn it, which is challenging. With agents, the primary way to leverage them is to defer to them, which is not. The more a user defers to an agent, the less important the user is a part of the system. If a human user offers utility to an agent system, it is not through default deferral.
+5. If a user considers the file system of a code repo to be an compilation target of an agentic system and implementation detail, they have lost the ability to steer the direction of the repo in an unmediated fashion
+6. If a user considers the content of files in a repo to be an opaque mediated plane best left untouched, they have lost the agency it would take to properly direct the agent or provide any sort of meaningful guardrail
+7. LOC has traditionally been a liability. If the user fails to understand why, or regulate this in any meaningful way, they have lost the ability to oversee development
+8. Users tend to assume that agents will make judgement calls the same way they would. There is not reason for this to be true besides RLHF creating a toxic communication dynamic where the user is enouraged to think that their highly underspecified wishes will be executed with psychic level predictability.
